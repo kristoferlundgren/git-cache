@@ -4,9 +4,9 @@
 
 
 function error {
-    local code="$1"
+    local code="$1"; shift
 
-    for message in "$*"; do echo "$message" >&2; done
+    for message in "$@"; do echo "$message" >&2; done
     exit $code
 }
 
@@ -43,7 +43,7 @@ function init_cache {
     [ "$cache_dir" ] || \
       error 1 "No cache dir supplied"
     [ -d "$cache_dir" -a -f "$cache_dir/HEAD" ] && \
-      error 1 "Cache directory is already initialised. You can use 'git cache delete --force' to delete it." "** dir=$cache_dir"
+      error 1 "Cache directory is already initialised. You can use 'git cache delete --force' to delete it." "Cache dir = '$cache_dir'"
 
     mkdir -p "$cache_dir"
     ( cd "$cache_dir"
@@ -125,7 +125,7 @@ function add_remote {
     local cache_dir=$(find_cache_dir)
 
     [ "$name" -a "$remote" ] || \
-      error 1 "Please supply the remote name and the remote url to be added in the cache directory."
+      error 1 "Please supply the remote name and the remote url to be added to the cache."
 
     # add_remote_via_temp_dir "$name" "$remote" "$cache_dir"
 
