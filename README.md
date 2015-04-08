@@ -26,11 +26,11 @@ If you are a regular hacker of a software, say MediaWiki, you can cache most com
 
     $ sudo git cache init  # cache is located in /var/cache/git-cache
     $ git cache add mediawiki https://git.wikimedia.org/git/mediawiki/core.git
-      
+
       You can now use the cache directory with:
-      
+
           git clone --reference /var/cache/git-cache https://git.wikimedia.org/git/mediawiki/core.git
-      
+
       (1607 seconds, the cache takes 314 Mio)
     $ git clone --reference /var/cache/git-cache https://git.wikimedia.org/git/mediawiki/core.git clone-1
       (46 seconds, the directory takes 98 Mio, the .git subdirectory takes 17 Mio because there were new commits)
@@ -45,26 +45,27 @@ __Installation:__ Copy git-cache inside your git commands directory (on Ubuntu: 
 
 __Use:__ All commands have the format
 
-    git cache ACTION PARAMETERS
+    git cache ACTION [SUB-ACTION] PARAMETERS
 
 __Commands:__
 
     # General maintenance commands
-    git cache init [DIR]       initialise the cache directory
-    git cache delete --force   delete the cache directory
-    
+    git cache init [DIR]              initialise the cache directory
+    git cache delete --force          delete the cache directory
+
     # Daily commands
-    git cache add NAME URL     add a cached Git repository
-    git cache show [NAME]      show cached Git repositoryies/repository
-    git cache fetch            fetch all cached Git repositories
-    git cache rm --force NAME  remove a cached Git repository
-    
+    git cache remote add NAME URL     add a cached Git repository
+    git cache show [NAME]             show cached Git repositoryies/repository
+    git cache update                  fetch all cached Git repositories
+    git cache remote rm --force NAME  remove a cached Git repository
+    git cache clone NAME [DIR]         clone a cached repository into a dir (as per `git clone --reference ...` above)
+
     (Any other command will be applied to the cache directory,
      e.g. `git cache gc` or `git cache remote show`.)
 
-__Location of the cache directory:__ The default cache directory contains all cached repositories (each Git repository is a remote). If it is created by root, the cache directory is `/var/cache/git-cache`, else it is `~/.cache/git-cache`; it can also be another directory specified in the init command. This directory could become big, be sure you have enough place.
+__Location of the cache directory:__ The default cache directory contains all cached repositories (each Git repository is a remote). If it is created by root, the cache directory is `/var/cache/git-cache`, else it is `~/.cache/git-cache`; it can also be another directory specified in the init command. This directory could become big, be sure you have enough space.
 
-~~You can want to cron `git cache fetch` to automatically retrieve new commits.~~ (bug)
+~~You can want to cron `git cache update` to automatically retrieve new commits.~~ (bug)
 
 
 Development
@@ -94,3 +95,5 @@ References
 This program is a generalisation to arbitrary Git repositories of an idea and implementation by [Randy Fay](http://randyfay.com/content/reference-cache-repositories-speed-clones-git-clone-reference) specifically for Drupal. Hopefully this generalisation is sufficiently simple to stay useable and practical.
 
 Similar program: [git-cached by dvessel](https://github.com/dvessel/git-cached)
+
+@mexisme -- I refactored (moved code into functions, used case-blocks instead of if-elseif trees) added a `remote` super-command, and a `clone` command.
