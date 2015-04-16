@@ -264,6 +264,6 @@ case "$command" in
         # Default trigger to directly act on the cache directory
 
         ( cd "$(find_cache_dir)"
-          git "$@" )
+          git "$command" "$@" )
         ;;
 esac
