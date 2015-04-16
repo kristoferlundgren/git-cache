@@ -162,7 +162,7 @@ function find_remote_url {
     [ "$name" ] || \
       error 1 "Please supply the remote name to find the URL for."
 
-    show_remotes |awk '$1 = name { print $2 }' name="$name"
+    show_remotes |awk '$1 == name { print $2 }' name="$name"
 }
 
 function show_remotes {
