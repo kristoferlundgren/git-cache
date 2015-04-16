@@ -238,13 +238,14 @@ case "$command" in
         echo
         echo "Use:"
         echo
-        echo "    git cache init [DIR]       initialise the cache directory"
-        echo "    git cache delete --force   delete the cache directory"
+        echo "    git cache init [DIR]              initialise the cache directory"
+        echo "    git cache delete --force          delete the cache directory"
         echo
-        echo "    git cache add NAME URL     add a cached Git repository"
-        echo "    git cache show [NAME]      show all cached Git repositories"
-        echo "    git cache fetch            fetch all cached Git repository"
-        echo "    git cache rm --force NAME  remove a cached Git repository"
+        echo "    git cache remote add NAME URL     add a cached Git repository"
+        echo "    git cache remote rm --force NAME  remove a cached Git repository"
+        echo "    git cache show [NAME]             show all cached Git repositories"
+        echo "    git cache update                  fetch all cached Git repository"
+        echo "    git cache clone NAME [DIR]        clone a cached repository into a dir"
         echo
         echo "    (Any other command will be applied to the cache directory.)"
         echo "     e.g. 'git cache gc' or 'git cache remote show'.)"

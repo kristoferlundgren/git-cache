@@ -55,10 +55,10 @@ __Commands:__
 
     # Daily commands
     git cache remote add NAME URL     add a cached Git repository
+    git cache remote rm --force NAME  remove a cached Git repository
     git cache show [NAME]             show cached Git repositoryies/repository
     git cache update                  fetch all cached Git repositories
-    git cache remote rm --force NAME  remove a cached Git repository
-    git cache clone NAME [DIR]         clone a cached repository into a dir (as per `git clone --reference ...` above)
+    git cache clone NAME [DIR]        clone a cached repository into a dir (as per `git clone --reference ...` above)
 
     (Any other command will be applied to the cache directory,
      e.g. `git cache gc` or `git cache remote show`.)
