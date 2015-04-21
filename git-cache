@@ -17,6 +17,12 @@ function find_cache_dir {
     echo "$cache_dir"
 }
 
+function set_umask {
+    local cache_dir=$(find_cache_dir)
+    [[ $cache_dir ]] || error 1 "I don't know where your cache is stored!"
+    is_system_cache "$cache_dir" && umask 002
+}
+
 #########
 ## MANAGE CACHE
 
@@ -75,6 +81,7 @@ function delete_cache {
 
 function is_system_cache {
     local cache_dir="$1"
+    [[ $cache_dir ]] || error 1 "Please supply the cache-dir to check for is_system_cache()."
     [[ $cache_dir == /var/* ]] && return 0
     return 1
 }
@@ -175,6 +182,9 @@ function show_remotes {
 ##########
 ## MAIN
 #########
+
+# If you're using a system cache, you need to not block the others in the group:
+set_umask
 
 command="$1"; shift
 case "$command" in
