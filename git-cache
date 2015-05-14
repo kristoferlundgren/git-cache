@@ -274,6 +274,10 @@ case "$command" in
         # Default trigger to directly act on the cache directory
 
         ( cd "$(find_cache_dir)"
-          git "$command" "$@" )
+          if [[ $command == "" ]]; then
+            $0 show
+          else
+              git "$command" "$@"
+          fi )
         ;;
 esac
