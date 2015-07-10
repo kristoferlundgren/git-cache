@@ -195,7 +195,7 @@ case $command in
         exit
         ;;
 
-    help)
+    help|-help|--help|-h)
         echo
         echo "Use:"
         echo
