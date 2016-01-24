@@ -37,6 +37,10 @@ function create_cache {
         cache_dir=/var/cache/git-cache
         type=system
       fi
+      if [ -w /Library/Caches ]; then
+        cache_dir=/Library/Caches/git-cache
+        type=system
+      fi
     fi
 
     [[ $cache_dir =~ ^/|~ ]] || cache_dir="$PWD/$cache_dir"
