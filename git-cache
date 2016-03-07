@@ -30,17 +30,32 @@ function create_cache {
     local cache_dir="$1"
     local type="$2"
 
-    [ "$type" ] || type=global
+    case "$type" in
+        ""|global)
+            type=system
+            ;;
+        local)
+            type=global
+            ;;
+        *)
+            error 1 "Cache type '$type' not recognised."
+            ;;
+    esac
+
     if [ -z "$cache_dir" ]; then
-      cache_dir=~/.cache/git-cache
-      if [ -w /var/cache ]; then
-        cache_dir=/var/cache/git-cache
-        type=system
-      fi
-      if [ -w /Library/Caches ]; then
-        cache_dir=/Library/Caches/git-cache
-        type=system
-      fi
+      case "$type" in
+          global)
+              cache_dir=~/.cache/git-cache
+          ;;
+          system)
+              if [ -w /var/cache ]; then
+                cache_dir=/var/cache/git-cache
+              fi
+              if [ -w /Library/Caches ]; then
+                cache_dir=/Library/Caches/git-cache
+              fi
+          ;;
+      esac
     fi
 
     [[ $cache_dir =~ ^/|~ ]] || cache_dir="$PWD/$cache_dir"
