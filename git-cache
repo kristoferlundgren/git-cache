@@ -210,7 +210,7 @@ function show_remotes {
 command="$1"; shift
 case $command in
     init)
-        create_cache "$1"
+        create_cache "$1" "$2"
         exit
         ;;
 
@@ -218,7 +218,7 @@ case $command in
         echo
         echo "Use:"
         echo
-        echo "    git cache init [DIR]              initialise the cache directory"
+        echo "    git cache init [DIR] [TYPE]       initialise the cache directory; TYPE=local|global (default: local)"
         echo "    git cache delete --force          delete the cache directory"
         echo
         echo "    git cache remote add NAME URL     add a cached Git repository"
@@ -232,8 +232,8 @@ case $command in
         echo
         echo "Standard cache directory is either:"
         echo
-        echo "    /var/cache/git-cache  if created by root (then usable by every user)"
-        echo "    ~/.cache/git-cache    else"
+        echo "    /var/cache/git-cache  if created by root, and cache is init with TYPE='global' (then usable by every user)"
+        echo "    ~/.cache/git-cache    else (or cache init TYPE='local')"
         echo
         echo "Once created, the cache directory is written in the configuration parameter"
         echo "'cache.directory', either in the system or global user configuration."
