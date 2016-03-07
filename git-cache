@@ -31,10 +31,10 @@ function create_cache {
     local type="$2"
 
     case "$type" in
-        ""|global)
+        global)
             type=system
             ;;
-        local)
+        ""|local)
             type=global
             ;;
         *)
