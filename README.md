@@ -24,6 +24,7 @@ Both clones can access the whole history of the Git repository.
 Internally, the second clone contains a file `.git/objects/info/alternates` containing the path of the first repo, which
 tells git to search the referenced `alternates` repo for any commits that can't be found in the current repo.
 Obviously, if you delete the referenced (first) repo, the second copy is useless and will display tonnes of errors.
+Newer versions of git have a '--dissociate' feature that allows the copy to be independent from the first.
 
 
 git-cache
@@ -38,17 +39,15 @@ recent ones.
 Example use case:
 
     $ sudo git cache init  # cache is located in /var/cache/git-cache
-    $ git cache add mediawiki https://git.wikimedia.org/git/mediawiki/core.git
+    $ git cache add linux https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git
 
       You can now use the cache directory with:
 
-          git clone --reference /var/cache/git-cache https://git.wikimedia.org/git/mediawiki/core.git
+          git cache clone linux
 
-      (1607 seconds, the cache takes 314 Mio)
-    $ git clone --reference /var/cache/git-cache https://git.wikimedia.org/git/mediawiki/core.git clone-1
-      (46 seconds, the directory takes 98 Mio, the .git subdirectory takes 17 Mio because there were new commits)
-    $ git clone --reference /var/cache/git-cache https://git.wikimedia.org/git/mediawiki/core.git clone-2
-      (58 seconds, the directory takes 98 Mio, the .git subdirectory takes 17 Mio because there were new commits)
+      Or clone a similiar fork:
+
+          git cache clone git://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-stable-rt.git
 
 
 Usage
@@ -66,18 +65,22 @@ All commands have the format:
 __Commands:__
 
     # General maintenance commands
-    git cache init [DIR]              initialise the cache directory
-    git cache delete --force          delete the cache directory
+    git cache init [DIR] [TYPE]         initialise the cache directory; TYPE=local|global (default: local)
+    git cache delete --force            delete the cache directory
 
     # Daily commands
-    git cache remote add NAME URL     add a cached Git repository
-    git cache remote rm --force NAME  remove a cached Git repository
-    git cache show [NAME]             show cached Git repositoryies/repository
-    git cache update                  fetch all cached Git repositories
-    git cache clone NAME [DIR]        clone a cached repository into a dir (as per `git clone --reference ...` above)
+    git cache add NAME URL              add a cached git repository
+    git cache rm --force NAME           remove a cached git repository
+    git cache show                      show all cached git repositories
+    git cache update                    fetch all cached git repository
+    git cache clone URL/NAME [DIR]      dissociated clone using cache (safe to delete cache or move off machine)
+    git cache refclone URL/NAME [DIR]   clone using cache keeping references to cache (minimizes disk space, unsafe to move)
 
-    (Any other command will be applied to the cache directory,
-     e.g. `git cache gc` or `git cache remote show`.)
+    clone commands accept either the name of an already cached git repository or an arbitrary remote URL
+    cloning forks will still result in a signifigant speedup, any objects found in cache will be used rather than downloaded
+
+    (Any other command will be applied to the cache directory.)
+     e.g. 'git cache gc' or 'git cache remote show'.)
 
 __Location of the cache directory:__
 The default cache directory contains all cached repositories (each Git repository is a remote).
