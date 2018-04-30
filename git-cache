@@ -113,28 +113,42 @@ function is_system_cache {
 ##########
 ## GEN
 
-function clone_referring_cache {
-    local remote_url="$(find_remote_url "$1")"
-    if [ -z "$remote_url" ]; then
-        remote_url="$1"
-    fi
+function clone_cache {
+    find_remote_url "$1"
     shift
-    local cache_dir=$(find_cache_dir)
-    [ "$remote_url" ] || \
-      error 1 "Please supply the remote url to be cloned."
+    cache_dir=$(find_cache_dir)
     git clone --reference "$cache_dir" --dissociate "$remote_url" "$@"
 }
 
-function refclone_referring_cache {
-    local remote_url="$(find_remote_url "$1")"
-    if [ -z "$remote_url" ]; then
-        remote_url="$1"
-    fi
+function ref_clone_cache {
+    find_remote_url "$1"
     shift
-    local cache_dir=$(find_cache_dir)
-    [ "$remote_url" ] || \
-      error 1 "Please supply the remote url to be cloned."
+    cache_dir=$(find_cache_dir)
     git clone --reference "$cache_dir" "$remote_url" "$@"
+}
+
+function submodule_add_cache {
+    find_remote_url "$1"
+    shift
+    cache_dir=$(find_cache_dir)
+    echo git submodule add --reference "$cache_dir" --dissociate "$remote_url" "$@"
+}
+
+function ref_submodule_add_cache {
+    find_remote_url "$1"
+    shift
+    cache_dir=$(find_cache_dir)
+    git submodule add --reference "$cache_dir" "$remote_url" "$@"
+}
+
+function submodule_update_cache {
+    cache_dir=$(find_cache_dir)
+    git submodule update --reference "$cache_dir" --dissociate "$remote_url" "$@"
+}
+
+function refsubmodule_update_cache {
+    cache_dir=$(find_cache_dir)
+    git submodule update --reference "$cache_dir" "$remote_url" "$@"
 }
 
 function update_cached_repos {
@@ -195,11 +209,13 @@ function add_remote_via_temp_dir {
 }
 
 function find_remote_url {
-    local name="$1"
-    [ "$name" ] || \
+    [ "$1" ] || \
       error 1 "Please supply the remote name to find the URL for."
 
-    show_remotes |awk '$1 == name { print $2 }' name="$name"
+    remote_url=$(show_remotes |awk '$1 == name { print $2 }' name="$1")
+    if [ -z "$remote_url" ]; then
+        remote_url="$1"
+    fi
 }
 
 function show_remotes {
@@ -224,18 +240,20 @@ case $command in
         echo
         echo "Use:"
         echo
-        echo "    git cache init [DIR] [TYPE]         initialise the cache directory; TYPE=local|global (default: local)"
-        echo "    git cache delete --force            delete the cache directory"
+        echo "    git cache init [DIR] [TYPE]                          initialise the cache directory; TYPE=local|global (default: local)"
+        echo "    git cache delete --force                             delete the cache directory"
         echo
-        echo "    git cache add NAME URL              add a cached git repository"
-        echo "    git cache rm --force NAME           remove a cached git repository"
-        echo "    git cache show                      show all cached git repositories"
-        echo "    git cache update                    fetch all cached git repository"
-        echo "    git cache clone URL/NAME [DIR]      dissociated clone using cache (safe to delete cache or move off machine)"
-        echo "    git cache refclone URL/NAME [DIR]   clone using cache keeping references to cache (minimizes disk space, unsafe to move)"
+        echo "    git cache add NAME URL                               add a cached git repository"
+        echo "    git cache rm --force NAME                            remove a cached git repository"
+        echo "    git cache show                                       show all cached git repositories"
+        echo "    git cache update                                     fetch all cached git repository"
+        echo "    git cache clone [--dependent] URL/NAME [DIR]         clone using cache"
+        echo "    git cache submodule add [--dependent] URL/NAME [DIR] add submodule using cache"
         echo
         echo "    clone commands accept either the name of an already cached git repository or an arbitrary remote URL"
         echo "    cloning remote forks will still result in a signifigant speedup, any objects found in cache will be used rather than downloaded"
+        echo "    --dependent will keep object alternate references to the cache, which results in less disk space, but the repository depends on the cache existence"
+        echo "    without the option the clone will take up more space, but it will be independent like a normal clone"
         echo
         echo "    (Any other command will be applied to the cache directory.)"
         echo "     e.g. 'git cache gc' or 'git cache remote show'.)"
@@ -255,6 +273,9 @@ esac
 # If you're using a system cache, you need to not block the others in the group:
 set_umask
 
+# https://stackoverflow.com/questions/1401002/trick-an-application-into-thinking-its-stdout-is-a-terminal-not-a-pipe#
+function faketty { script -qfc "$(printf "%q " "$@")" /dev/null ; }
+
 case "$command" in
     delete)
         [ "$1" = "--force" ] || \
@@ -263,11 +284,50 @@ case "$command" in
         ;;
 
     clone)
-        clone_referring_cache "$@"
+        dissociate="--dissociate"
+        if [ "$1" = "--dependent" ]; then
+            dissociate=""; shift
+        fi
+        
+        find_remote_url "$1"; shift
+        cache_dir=$(find_cache_dir)
+        # TODO: --dissociate is not available in older gits. Might want to detect version and use workaround
+        git clone --reference "$cache_dir" $dissociate "$remote_url" "$@"
         ;;
         
-    refclone)
-        refclone_referring_cache "$@"
+    submodule)
+        submodule_command="$1"; shift
+        
+        dissociate="--dissociate"
+        if [ "$1" = "--dependent" ]; then
+            dissociate=""; shift
+        fi
+        
+        find_remote_url "$1"; shift
+        cache_dir=$(find_cache_dir)
+        case "$submodule_command" in
+            add)
+                #https://unix.stackexchange.com/questions/97920/how-to-cd-automatically-after-git-clone
+                git_out=$(mktemp)
+                # Using faketty since git wants to be more quiet when it detects a pipe redirect. clone has a '--progress' option to ignore this, but yet again the option is missing for submodule
+                faketty git submodule add --reference "$cache_dir" "$remote_url" "$@" 2>&1 | tee "$git_out"
+                repo_name=$(awk -F\' '/Cloning into/ {print $2}' $git_out)
+                rm "$git_out"
+                
+                # Even as of git 2.16.3, git is oddly missing --dissociate for submodule use. Have to use a workaround.
+                if [ ! -z "$dissociate" ]; then
+                    cd "$repo_name"
+                    git repack -a
+                    git_folder=$(cat .git | cut -d ' ' -f 2)
+                    rm "${git_folder}/objects/info/alternates"
+                fi
+            ;;
+            # TODO: Support "submodule update"
+        esac
+        ;;
+        
+    submodule_add)
+        submodule_add_cache "$@"
         ;;
 
     fetch|update)
@@ -286,10 +346,6 @@ case "$command" in
 
     add)
         add_remote "$1" "$2"
-        ;;
-
-    show)
-        show_remotes
         ;;
 
     *)

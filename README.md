@@ -69,15 +69,17 @@ __Commands:__
     git cache delete --force            delete the cache directory
 
     # Daily commands
-    git cache add NAME URL              add a cached git repository
-    git cache rm --force NAME           remove a cached git repository
-    git cache show                      show all cached git repositories
-    git cache update                    fetch all cached git repository
-    git cache clone URL/NAME [DIR]      dissociated clone using cache (safe to delete cache or move off machine)
-    git cache refclone URL/NAME [DIR]   clone using cache keeping references to cache (minimizes disk space, unsafe to move)
+    git cache add NAME URL                               add a cached git repository
+    git cache rm --force NAME                            remove a cached git repository
+    git cache show                                       show all cached git repositories
+    git cache update                                     fetch all cached git repository
+    git cache clone [--dependent] URL/NAME [DIR]         clone using cache
+    git cache submodule add [--dependent] URL/NAME [DIR] add submodule using cache
 
     clone commands accept either the name of an already cached git repository or an arbitrary remote URL
-    cloning forks will still result in a signifigant speedup, any objects found in cache will be used rather than downloaded
+    cloning remote forks will still result in a signifigant speedup, any objects found in cache will be used rather than downloaded
+    --dependent will keep object alternate references to the cache, which results in less disk space, but the repository depends on the cache existence
+    without the option the clone will take up more space, but it will be independent like a normal clone
 
     (Any other command will be applied to the cache directory.)
      e.g. 'git cache gc' or 'git cache remote show'.)
