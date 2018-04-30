@@ -33,7 +33,7 @@ git-cache
 `git-cache` creates a central cache directory on a computer, which contains most of the commits of regularly cloned Git
 repositories.
 
-If you are a regular hacker of a software, say MediaWiki, you can cache most commits and then only download the most
+If you are a regular hacker of a software you can cache most commits and then only download the most
 recent ones.
 
 Example use case:
@@ -90,48 +90,6 @@ it can also be configured to use another directory if you specify this with the 
 __Note:__ This directory could become __big__, be sure you have enough space.
 
 ~~You may want to create a cron-job to run `git cache update` to automatically retrieve new commits.~~ (bug)
-
-
-Development
------------
-
-This is an updated version by [mexisme](https://github.com/mexisme):
-- fairly substantially refactored/restructured
-  - moved code into functions
-  - used case-blocks (instead of if-elseif trees)
-- commands rearranged
-- a few new commands
-  - a `remote` super-command
-  - a `clone` command.
-- some bugs fixed
-- README language slightly updated
-
-TODO:
-- [ ] Rethink some of the sub-commands and names; it would help if they matched common git usages/conventions
-- [ ] Figure-out a faster way to do the intial copy-into-cache with a large cache
-- [ ] Port away from Bash/Shell; it's a pain to deal effectively with certain types of failures
-  - Besides C, it looks like `sh` (*not* `bash`) and `perl` are directly expected/supported by git. There's a single reference to Ruby
-  - I'd prefer Ruby, Rust or Go, but Perl wouldn't be a problem
-- [ ] Does it make sense to auto-gc the cache?
-- [ ] Does it make sense to auto-update the cache contents? How can we make sure to only do this over cheap/fast links?  
-
-
-__From the original README:__
-
-This is a first version, and feedback is needed to improve its daily usage. Some questions I wonder:
-- Are the subcommands sufficiently explicit?
-- Should we regularly run `git gc` or even `git gc --aggressive`?
-- How git behaves when some commits are both local and in the cache? Does it remove local objects to gain place?
-- etc.
-
-Internally the cache directory is a big bare directory containing all remote repositories, even if they do not share
-commits (sort of orphans branches).
-Should the cache directory be splitted by repository: /var/cache/git-cache/mediawiki, /var/cache/git-cache/visualeditor,
-etc.
-Particularly in the second case, the name of the remote repository is useless, and I would prefer use unique names,
-e.g. md5(URL) and completely hide this to the user (possibly with soft links from the URL to the directory for usability
-inside the cache directory).
-
 
 Licence
 -------
