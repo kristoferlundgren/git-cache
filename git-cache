@@ -62,6 +62,8 @@ function create_cache {
 
 	[[ $cache_dir =~ ^/|~ ]] || cache_dir="$PWD/${cache_dir}"
 
+	cache_dir=$(realpath "${cache_dir}")
+
 	set_umask "${cache_dir}"
 	init_cache "${cache_dir}"
 
