@@ -22,9 +22,6 @@ function set_umask {
 	is_system_cache "${cache_dir}" && umask 002
 }
 
-# https://stackoverflow.com/questions/1401002/trick-an-application-into-thinking-its-stdout-is-a-terminal-not-a-pipe#
-function faketty { script -qfc "$(printf "%q " "$@")" /dev/null ; }
-
 ###############
 ## MANAGE CACHE
 
@@ -268,8 +265,7 @@ case "${command}" in
 		
 		find_remote_url "$1"; shift
 		cache_dir=$(find_cache_dir)
-		# TODO: --dissociate is not available in older gits. Might want to detect version and use workaround
-		git clone --reference "$cache_dir" $dissociate "$remote_url" "$@"
+		git clone --reference "${cache_dir}" $dissociate "${remote_url}" "$@"
 		;;
 		
 	submodule)
@@ -284,22 +280,11 @@ case "${command}" in
 		cache_dir=$(find_cache_dir)
 		case "${submodule_command}" in
 			add)
-				#https://unix.stackexchange.com/questions/97920/how-to-cd-automatically-after-git-clone
-				git_out=$(mktemp)
-				# Using faketty since git wants to be more quiet when it detects a pipe redirect. clone has a '--progress' option to ignore this, but yet again the option is missing for submodule
-				faketty git submodule add --reference "${cache_dir}" "${remote_url}" "$@" 2>&1 | tee "${git_out}"
-				repo_name=$(awk -F\' '/Cloning into/ {print $2}' "${git_out}")
-				rm "${git_out}"
-				
-				# Even as of git 2.16.3, git is oddly missing --dissociate for submodule use. Have to use a workaround.
-				if [ ! -z "${dissociate}" ]; then
-					cd "${repo_name}" || error 1
-					git repack -a
-					git_folder=$(cut -d ' ' -f 2 .git)
-					rm "${git_folder}/objects/info/alternates"
-				fi
+				git submodule add --reference "${cache_dir}" $dissociate "${remote_url}" "$@"
 			;;
-			# TODO: Support "submodule update"
+			update)
+				git submodule update --reference "${cache_dir}" $dissociate "$@"
+			;;
 		esac
 		;;
 
