@@ -146,17 +146,18 @@ function rm_remote {
 function add_remote {
 	local name="$1"
 	local remote="$2"
+	local branch="$3"
 	local cache_dir
 	cache_dir=$(find_cache_dir)
 
-	[[ "${name}" && "${remote}" ]] || error 1 "Please supply the remote name and the remote url to be added to the cache."
+	[[ "${name}" && "${remote}" ]] || error 1 "Please supply the remote name and the remote url to be added to the cache. You can also pass a branch name as third argument."
 
 	# add_remote_via_temp_dir "$name" "$remote" "$cache_dir"
 
 	(
 		cd "${cache_dir}" || error 1
 		git remote add "${name}" "${remote}"
-		git fetch "${name}"
+		git fetch "${name}" "$branch"
 	)
 }
 
@@ -317,7 +318,7 @@ case "${command}" in
 		;;
 
 	add)
-		add_remote "$1" "$2"
+		add_remote "$1" "$2" "$3"
 		;;
 
 	*)
